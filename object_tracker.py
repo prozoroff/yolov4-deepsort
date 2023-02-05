@@ -157,7 +157,9 @@ def main(_argv):
         class_names = utils.read_class_names(cfg.YOLO.CLASSES)
 
         # by default allow all classes in .names file
-        allowed_classes = list(class_names.values())
+        #allowed_classes = list(class_names.values())
+
+        allowed_classes = ['person']
         
         # custom allowed classes (uncomment line below to customize tracker for only people)
         #allowed_classes = ['person']
