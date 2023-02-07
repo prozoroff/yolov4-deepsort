@@ -91,6 +91,9 @@ def main(_argv):
         out = cv2.VideoWriter(FLAGS.output, codec, fps, (width, height))
 
     frame_num = 0
+
+    tracks = {}
+
     # while video is running
     while True:
         return_value, frame = vid.read()
@@ -209,12 +212,25 @@ def main(_argv):
             bbox = track.to_tlbr()
             class_name = track.get_class()
             
-        # draw bbox on screen
+            # draw bbox on screen
             color = colors[int(track.track_id) % len(colors)]
             color = [i * 255 for i in color]
+            track_name = class_name + "-" + str(track.track_id)
             cv2.rectangle(frame, (int(bbox[0]), int(bbox[1])), (int(bbox[2]), int(bbox[3])), color, 2)
             cv2.rectangle(frame, (int(bbox[0]), int(bbox[1]-30)), (int(bbox[0])+(len(class_name)+len(str(track.track_id)))*17, int(bbox[1])), color, -1)
-            cv2.putText(frame, class_name + "-" + str(track.track_id),(int(bbox[0]), int(bbox[1]-10)),0, 0.75, (255,255,255),2)
+            cv2.putText(frame, track_name,(int(bbox[0]), int(bbox[1]-10)),0, 0.75, (255,255,255),2)
+
+            #push to tracks
+            bottom_point = (int((int(bbox[0]) + int(bbox[2])) / 2), int(bbox[3]))
+            if track_name in tracks:
+                tracks[track_name].append(bottom_point)
+            else:
+                tracks[track_name] = [bottom_point]
+            
+            # draw tracks as lines
+            if len(tracks[track_name]) > 1:
+                for i in range(len(tracks[track_name]) - 1):
+                    cv2.line(frame, tracks[track_name][i], tracks[track_name][i + 1], (0,255,0),2)
 
         # if enable info flag then print details about each track
             if FLAGS.info:
@@ -234,6 +250,7 @@ def main(_argv):
             out.write(result)
         if cv2.waitKey(1) & 0xFF == ord('q'): break
     cv2.destroyAllWindows()
+    print(tracks)
 
 if __name__ == '__main__':
     try:
