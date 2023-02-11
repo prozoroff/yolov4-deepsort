@@ -5,10 +5,10 @@ import math
 
 IMAGE_H = 1520
 IMAGE_W = 2592
-GRID_SIZE = 50
+GRID_SIZE = 100
 
 src = np.float32([[0, 225], [IMAGE_W, 225], [0, IMAGE_H], [IMAGE_W, IMAGE_H]])
-dst = np.float32([[587, 225], [1873, 225], [0, IMAGE_H], [IMAGE_W, IMAGE_H]])
+dst = np.float32([[860, 225], [1552, 225], [0, IMAGE_H], [IMAGE_W, IMAGE_H]])
 M = cv2.getPerspectiveTransform(src, dst)
 Minv = cv2.getPerspectiveTransform(dst, src)
 
@@ -104,7 +104,7 @@ for j in range(GRID_SIZE):
             b_l = trasnformPoint([min_x + int(i * step_x), min_y + int(j * step_y) + int(step_y)])
             b_r = trasnformPoint([min_x + int(i * step_x) + int(step_x), min_y + int(j * step_y) + int(step_y)])
             points = np.array([t_l, t_r, b_r, b_l])
-            cv2.fillPoly(img, np.int32([points]), (0, 255, 0))
+            cv2.fillPoly(img, np.int32([points]), (255 - item['average'] * 10, item['average'] * 10, 0))
 
 plt.imshow(img)
 plt.show()
