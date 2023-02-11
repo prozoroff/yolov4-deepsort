@@ -38,6 +38,8 @@ flags.DEFINE_boolean('dont_show', False, 'dont show video output')
 flags.DEFINE_boolean('info', False, 'show detailed info of tracked objects')
 flags.DEFINE_boolean('count', False, 'count objects being tracked on screen')
 
+transform = np.load('./outputs/transform.dat', allow_pickle=True)
+
 def main(_argv):
     # Definition of the parameters
     max_cosine_distance = 0.4
@@ -223,14 +225,15 @@ def main(_argv):
             #push to tracks
             bottom_point = (int((int(bbox[0]) + int(bbox[2])) / 2), int(bbox[3]))
             if track_name in tracks:
-                tracks[track_name].append(bottom_point)
+                tracks[track_name].append((bottom_point, frame_num))
             else:
-                tracks[track_name] = [bottom_point]
+                tracks[track_name] = [(bottom_point, frame_num)]
             
             # draw tracks as lines
             if len(tracks[track_name]) > 1:
                 for i in range(len(tracks[track_name]) - 1):
-                    cv2.line(frame, tracks[track_name][i], tracks[track_name][i + 1], (0,255,0),2)
+                    cv2.line(frame, tracks[track_name][i][0], tracks[track_name][i + 1][0], (0,255,0),2)
+
 
         # if enable info flag then print details about each track
             if FLAGS.info:
