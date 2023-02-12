@@ -5,7 +5,8 @@ import math
 
 IMAGE_H = 1520
 IMAGE_W = 2592
-GRID_SIZE = 100
+GRID_SIZE = 200
+MAX_SPEED = 7
 
 src = np.float32([[0, 225], [IMAGE_W, 225], [0, IMAGE_H], [IMAGE_W, IMAGE_H]])
 dst = np.float32([[860, 225], [1552, 225], [0, IMAGE_H], [IMAGE_W, IMAGE_H]])
@@ -46,6 +47,35 @@ def get_bounds(self):
         np.max([right_top[0], right_bottom[0]]),
         np.max([left_bottom[1], right_bottom[1]])
     )
+
+def fill_polly_alpha(img, points, color, alpha):
+    overlay = img.copy()
+    cv2.fillPoly(overlay, np.int32([points]), color)
+    cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0, img)
+
+def number_to_color(num, max):
+    fromR = 255
+    fromG = 0
+    fromB = 0
+
+    toR = 0
+    toG = 255
+    toB = 0
+
+    deltaR = round((toR - fromR) / max)
+    deltaG = round((toG - fromG) / max)
+    deltaB = round((toB - fromB) / max)
+
+    R = fromR + num * deltaR
+    G = fromG + num * deltaG
+    B = fromB + num * deltaB
+
+    return (R, G, B)
+
+def get_speed(px_per_frame):
+    WIDTH_IN_METERS = 7
+    FRAMES_PER_SECOND = 24
+    return (px_per_frame / IMAGE_W) * WIDTH_IN_METERS * FRAMES_PER_SECOND * 3.6
     
 class Grid:
     def __init__(self, size):
@@ -104,7 +134,10 @@ for j in range(GRID_SIZE):
             b_l = trasnformPoint([min_x + int(i * step_x), min_y + int(j * step_y) + int(step_y)])
             b_r = trasnformPoint([min_x + int(i * step_x) + int(step_x), min_y + int(j * step_y) + int(step_y)])
             points = np.array([t_l, t_r, b_r, b_l])
-            cv2.fillPoly(img, np.int32([points]), (255 - item['average'] * 10, item['average'] * 10, 0))
+            speed = get_speed(item['average'])
+            alpha = len(item['data']) / 10
+            color = number_to_color(speed, MAX_SPEED)
+            fill_polly_alpha(img, np.int32([points]), color, alpha)
 
 plt.imshow(img)
 plt.show()
