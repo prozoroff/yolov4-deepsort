@@ -14,6 +14,7 @@ from tensorflow.python.saved_model import tag_constants
 from core.config import cfg
 from PIL import Image
 import cv2
+import pickle
 import numpy as np
 import matplotlib.pyplot as plt
 from tensorflow.compat.v1 import ConfigProto
@@ -38,7 +39,7 @@ flags.DEFINE_boolean('dont_show', False, 'dont show video output')
 flags.DEFINE_boolean('info', False, 'show detailed info of tracked objects')
 flags.DEFINE_boolean('count', False, 'count objects being tracked on screen')
 
-transform = np.load('./outputs/transform.dat', allow_pickle=True)
+MAX_FRAMES = 5000
 
 def main(_argv):
     # Definition of the parameters
@@ -97,7 +98,7 @@ def main(_argv):
     tracks = {}
 
     # while video is running
-    while True:
+    while frame_num < MAX_FRAMES:
         return_value, frame = vid.read()
         if return_value:
             frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -254,6 +255,8 @@ def main(_argv):
         if cv2.waitKey(1) & 0xFF == ord('q'): break
     cv2.destroyAllWindows()
     print(tracks)
+    with open('./outputs/tracks.pkl', 'wb') as f:
+        pickle.dump(tracks, f)
 
 if __name__ == '__main__':
     try:
