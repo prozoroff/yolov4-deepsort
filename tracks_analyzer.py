@@ -81,6 +81,7 @@ def get_speed(px_per_frame):
 class Grid:
     def __init__(self, size):
         self.mat = [[0 for x in range(size)] for x in range(size)]
+        self.max_len = 0
 
     def set(self, coord, velocity):
         item = self.mat[coord[0]][coord[1]]
@@ -88,6 +89,7 @@ class Grid:
             item = {'average': 0, 'data': []}
         item['data'].append(velocity)
         item['average'] = np.average(item['data'])
+        self.max_len = max(self.max_len, len(item['data']))
         self.mat[coord[0]][coord[1]] = item
 
     def get(self, coord):
@@ -97,7 +99,7 @@ class Grid:
 img = cv2.imread('./data/images/frame.png')
 
 tracks = {}
-with open('./outputs/tracks.pkl', 'rb') as f:
+with open('./outputs/tracks_snow.pkl', 'rb') as f:
     tracks = pickle.load(f)
 
 tracks_normalized = normalize_tracks(tracks)
@@ -139,7 +141,7 @@ for j in range(GRID_SIZE):
             b_r = trasnformPoint([min_x + int(i * step_x) + int(step_x), min_y + int(j * step_y) + int(step_y)])
             points = np.array([t_l, t_r, b_r, b_l])
             speed = get_speed(item['average'])
-            alpha = len(item['data']) / 10
+            alpha = math.sqrt(len(item['data']) / grid.max_len)
             color = number_to_color(speed, MAX_SPEED)
             fill_polly_alpha(img, np.int32([points]), color, alpha)
 
