@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 import pickle
+from correct_distortion import correct_image, correct_point
 
 IMAGE_H = 1520
 IMAGE_W = 2592
@@ -33,7 +34,8 @@ def normalize_tracks(tracks):
     for key in tracks.keys():
         tracks_normalized[key] = []
         for (point, frame) in tracks[key]:
-            transformed_point = trasnformPointInv(point)
+            corrected_point = correct_point(point)
+            transformed_point = trasnformPointInv(corrected_point)
             tracks_normalized[key].append((transformed_point, frame))
     return tracks_normalized
 
@@ -96,7 +98,7 @@ class Grid:
         return self.mat[coord[0]][coord[1]]
 
 
-img = cv2.imread('./data/images/frame.png')
+img = correct_image(cv2.imread('./data/images/frame.png'))
 
 tracks = {}
 with open('./outputs/tracks_snow.pkl', 'rb') as f:
@@ -118,6 +120,8 @@ for key in tracks_normalized.keys():
             frames_between = points[i][1] - points[i-1][1] 
             velocity = math.sqrt(pow(cur_point[0] - prev_point[0], 2) + pow(cur_point[1] - prev_point[1], 2)) / frames_between
             coord = (int((cur_point[0] - min_x)/step_x), int((cur_point[1] - min_y)/step_y))
+            coord = (max(coord[0], 0), max(coord[1], 0))
+            coord = (min(coord[0], GRID_SIZE), min(coord[1], GRID_SIZE))
             grid.set(coord, velocity)
 
 x = min_x
