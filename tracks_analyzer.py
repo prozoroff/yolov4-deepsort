@@ -73,11 +73,11 @@ def number_to_color(num, max):
     G = fromG + num * deltaG
     B = fromB + num * deltaB
 
-    return (R, G, B)
+    return (B, G, R)
 
 def get_speed(px_per_frame):
-    WIDTH_IN_METERS = 7
-    FRAMES_PER_SECOND = 24
+    WIDTH_IN_METERS = 11
+    FRAMES_PER_SECOND = 14.4
     return (px_per_frame / IMAGE_W) * WIDTH_IN_METERS * FRAMES_PER_SECOND * 3.6
     
 class Grid:
@@ -101,7 +101,7 @@ class Grid:
 img = correct_image(cv2.imread('./data/images/frame.png'))
 
 tracks = {}
-with open('./outputs/tracks_snow.pkl', 'rb') as f:
+with open('./outputs/tracks_ice.pkl', 'rb') as f:
     tracks = pickle.load(f)
 
 tracks_normalized = normalize_tracks(tracks)
@@ -122,18 +122,11 @@ for key in tracks_normalized.keys():
             coord = (int((cur_point[0] - min_x)/step_x), int((cur_point[1] - min_y)/step_y))
             coord = (max(coord[0], 0), max(coord[1], 0))
             coord = (min(coord[0], GRID_SIZE), min(coord[1], GRID_SIZE))
-            grid.set(coord, velocity)
+            if velocity > 1:
+                grid.set(coord, velocity)
 
 x = min_x
 y = min_y
-
-while x <= max_x:
-    cv2.line(img, trasnformPoint((x, min_y)), trasnformPoint((x, max_y)), (255,255,255), 1)
-    x += step_x
-
-while y <= max_y:
-    cv2.line(img, trasnformPoint((min_x, y)), trasnformPoint((max_x, y)), (255,255,255), 1)
-    y += step_y
 
 for j in range(GRID_SIZE):
     for i in range(GRID_SIZE):
@@ -149,7 +142,16 @@ for j in range(GRID_SIZE):
             color = number_to_color(speed, MAX_SPEED)
             fill_polly_alpha(img, np.int32([points]), color, alpha)
 
+while x <= max_x:
+    cv2.line(img, trasnformPoint((x, min_y)), trasnformPoint((x, max_y)), (255,255,255), 2)
+    x += step_x
+
+while y <= max_y:
+    cv2.line(img, trasnformPoint((min_x, y)), trasnformPoint((max_x, y)), (255,255,255), 2)
+    y += step_y
+
 plt.imshow(img)
+cv2.imwrite('./outputs/images/blank_ice.png', img)
 plt.show()
 
 
